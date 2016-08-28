@@ -7,9 +7,12 @@ int main(int argc, char *argv[]) {
 	Window win;
 	HTMLLex lex;
 	HTMLParser parser;
-	lex.lex("<html><body><h1>title</h1>this is a content in the body</body></html>");
+	Renderer render;
+	// lex.lex("<html><body><h1>title</h1>this <p>HELLO</p> is a content in the body</body></html>");
+	lex.lex("<html><body><h1>title</h1></body></html>");
 	parser.parse(lex.get_token());
 	parser.show(parser.get_html()[0]);
+	render.rendering(parser.get_html());
 
-	// Gtk::Main::run(win);
+	Gtk::Main::run(win);
 }

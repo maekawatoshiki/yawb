@@ -1,49 +1,5 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <map>
-#include <algorithm>
+#include "html.hpp"
 
-enum {
-	TAG_HTML,
-	TAG_BODY,
-	TAG_H,
-	TAG_STRING,
-};
-
-class TagBase {
-	public:
-		TagBase() { }
-		virtual std::string get_tag_name() = 0;
-};
-class TagGENERAL : public TagBase {
-	public:
-		TagGENERAL(std::string _name, std::vector<TagBase *> _content):tag_name(_name), content(_content) { }
-		virtual std::string get_tag_name() { return tag_name; }
-		std::vector<TagBase *> content;
-		std::string tag_name;
-};
-class TagSTRING : public TagBase {
-	public:
-		TagSTRING(std::string _content):content(_content) { }
-		virtual std::string get_tag_name() { return "string"; }
-		std::string content;
-};
-
-enum { TOK_TAG, TOK_END_TAG, TOK_OTHER };
-struct token_t {
-	int type;
-	std::string str;
-	//std::vector<ARG>
-};
-class HTMLLex {
-		std::vector<token_t> token;
-	public:
-		HTMLLex() { }
-		~HTMLLex() {}
-		void lex(std::string);
-		std::vector<token_t> &get_token();
-};
 void HTMLLex::lex(std::string str) {
 	for(auto it = str.begin(); it != str.end(); ++it) {
 		if(*it == '<') {
@@ -56,7 +12,7 @@ void HTMLLex::lex(std::string str) {
 		} else if(*it != '<' && !isblank(*it)) {
 			std::string content;
 			while(*it != '<')
-				content += *(it++);
+				content += (*it == '\n') ? (it++, '\0') : *(it++);
 			it--;
 			token.push_back({TOK_OTHER, content});
 		}
@@ -67,16 +23,6 @@ void HTMLLex::lex(std::string str) {
 }
 std::vector<token_t> &HTMLLex::get_token() { return token; }
 
-class HTMLParser {
-		std::vector<TagBase *> html;
-	public:
-		HTMLParser() { }
-		~HTMLParser() {}
-		TagBase *parse_tag(std::vector<token_t>::iterator&);
-		void parse(std::vector<token_t>);
-		std::vector<TagBase *> &get_html();
-		void show(TagBase *);	
-};
 TagBase *HTMLParser::parse_tag(std::vector<token_t>::iterator &it) {
 	if(it->type == TOK_TAG) {
 		it++; // tag
@@ -109,5 +55,50 @@ void HTMLParser::show(TagBase *tag) {
 		for(auto t : ((TagGENERAL *)tag)->content)
 			show(t);
 		std::cout << "</" << name << ">";
+	}
+}
+
+TagInfo *Renderer::rendering(vec_tag::iterator &tag, TagInfo info) {
+	std::cout << "parent size: " << info.rect.size.x << "x" << info.rect.size.y << std::endl;
+	std::string name = (*tag)->get_tag_name();
+	std::cout << "curtag" << name << std::endl;
+	TagInfo ti; 
+	ti.rect.size.x = (name == "BODY" || name == "HTML") ? info.rect.size.x : 0;
+	ti.rect.size.y = info.rect.size.y;
+	(*tag)->set_info(ti);
+	if(name == "BODY" || name == "HTML") {
+		TagGENERAL *tb = (TagGENERAL *)*tag;
+		int top_y = 0;
+		for(auto t = tb->content.begin(); t != tb->content.end(); ++t) {
+			auto csz = rendering(t, ti);
+			csz->rect.top.y = top_y;
+			top_y += csz->rect.size.y;
+		}
+	} else if(name != "string") {
+		TagGENERAL *tb = (TagGENERAL *)*tag;
+		int top_y = info.rect.top.y;
+		for(auto t = tb->content.begin(); t != tb->content.end(); ++t) {
+			auto csz = rendering(t, ti);
+			ti.rect.size.x += csz->rect.size.x;
+			csz->rect.top.y = top_y;
+			std::cout << csz->rect.size.x << "x" << csz->rect.size.y << std::endl;
+			top_y += csz->rect.size.y;
+		}
+		(*tag)->set_info(ti);
+	} else {
+		TagSTRING *ts = (TagSTRING *)*tag;
+		TagInfo tinf;
+		tinf.rect.size.x = 50;
+		tinf.rect.size.y = info.rect.size.y;
+		ts->set_info(tinf);
+	}
+	return (*tag)->get_info();
+}
+void Renderer::rendering(vec_tag tags) {
+	TagInfo html_tag;
+	html_tag.rect.size.x = 300;
+	html_tag.rect.size.y = 300;
+	for(auto tag = tags.begin(); tag != tags.end(); ++tag) {
+		rendering(tag, html_tag);
 	}
 }
