@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <algorithm>
+#include "style.hpp"
 
 enum {
 	TAG_HTML,
@@ -66,6 +67,8 @@ class HTMLLex {
 
 class HTMLParser {
 		vec_tag html;
+		StyleLexer lexer;
+		StyleParser parser;
 	public:
 		HTMLParser() { }
 		~HTMLParser() {}

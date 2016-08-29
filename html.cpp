@@ -25,6 +25,10 @@ std::vector<token_t> &HTMLLex::get_token() { return token; }
 
 TagBase *HTMLParser::parse_tag(std::vector<token_t>::iterator &it) {
 	if(it->type == TOK_TAG) {
+		if(it->str == "STYLE") {
+			it++; lexer.lexer(it->str); it++;
+			parser.parse(lexer.get_token());
+		} else {
 		it++; // tag
 		TagBase *cont; std::vector<TagBase *> content;
 		while((cont = parse_tag(it)) != nullptr) { 
@@ -32,6 +36,7 @@ TagBase *HTMLParser::parse_tag(std::vector<token_t>::iterator &it) {
 			++it; //TOK_TAG_END
 		}
 		return new TagGENERAL(it->str, content);
+		}
 	} else if(it->type == TOK_OTHER) {
 		return new TagSTRING(it->str);
 	}
