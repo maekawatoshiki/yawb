@@ -8,11 +8,13 @@ int main(int argc, char *argv[]) {
 	HTMLLex lex;
 	HTMLParser parser;
 	Renderer render;
+	Painter painter(&win);
 	// lex.lex("<html><body><h1>title</h1>this <p>HELLO</p> is a content in the body</body></html>");
-	lex.lex("<html><body><h1>title</h1></body></html>");
+	lex.lex("<html><body><h1>title</h1>hello</body></html>");
 	parser.parse(lex.get_token());
 	parser.show(parser.get_html()[0]);
 	render.rendering(parser.get_html());
+	painter.paint(parser.get_html());
 
 	Gtk::Main::run(win);
 }

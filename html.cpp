@@ -59,43 +59,49 @@ void HTMLParser::show(TagBase *tag) {
 }
 
 TagInfo *Renderer::rendering(vec_tag::iterator &tag, TagInfo info) {
-	std::cout << "parent size: " << info.rect.size.x << "x" << info.rect.size.y << std::endl;
+	std::cout << "parent size: " << info.rect.top.x<<"x" << info.rect.top.y << ":" << info.rect.size.x << "x" << info.rect.size.y << std::endl;
 	std::string name = (*tag)->get_tag_name();
 	std::cout << "curtag" << name << std::endl;
+
 	TagInfo ti; 
-	ti.rect.size.x = (name == "BODY" || name == "HTML") ? info.rect.size.x : 0;
-	ti.rect.size.y = info.rect.size.y;
+	ti.rect.size.x = 200;
+	ti.rect.size.y = (name == "BODY" || name == "HTML") ? info.rect.size.y : 0;
 	(*tag)->set_info(ti);
+
 	if(name == "BODY" || name == "HTML") {
 		TagGENERAL *tb = (TagGENERAL *)*tag;
 		int top_y = 0;
 		for(auto t = tb->content.begin(); t != tb->content.end(); ++t) {
 			auto csz = rendering(t, ti);
 			csz->rect.top.y = top_y;
-			top_y += csz->rect.size.y;
+			top_y += (*t)->get_tag_name() == "BODY" ? 0 : csz->rect.size.y;
+			std::cout << "topy:" << top_y << std::endl;
 		}
 	} else if(name != "string") {
 		TagGENERAL *tb = (TagGENERAL *)*tag;
 		int top_y = info.rect.top.y;
 		for(auto t = tb->content.begin(); t != tb->content.end(); ++t) {
 			auto csz = rendering(t, ti);
-			ti.rect.size.x += csz->rect.size.x;
+			ti.rect.size.y += csz->rect.size.y;
 			csz->rect.top.y = top_y;
 			std::cout << csz->rect.size.x << "x" << csz->rect.size.y << std::endl;
 			top_y += csz->rect.size.y;
+			std::cout << "topy:" << top_y << std::endl;
 		}
 		(*tag)->set_info(ti);
 	} else {
 		TagSTRING *ts = (TagSTRING *)*tag;
 		TagInfo tinf;
+		tinf.rect.top.x = info.rect.top.x;
+		tinf.rect.top.y = info.rect.top.y;
 		tinf.rect.size.x = 50;
 		tinf.rect.size.y = info.rect.size.y;
 		ts->set_info(tinf);
 	}
 	return (*tag)->get_info();
 }
-void Renderer::rendering(vec_tag tags) {
-	TagInfo html_tag;
+void Renderer::rendering(vec_tag &tags) {
+	TagInfo html_tag = {};
 	html_tag.rect.size.x = 300;
 	html_tag.rect.size.y = 300;
 	for(auto tag = tags.begin(); tag != tags.end(); ++tag) {

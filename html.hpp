@@ -1,3 +1,4 @@
+#pragma once 
 #include <iostream>
 #include <vector>
 #include <string>
@@ -35,7 +36,7 @@ class TagGENERAL : public TagBase {
 		virtual void set_info(TagInfo ti) { info = ti; };
 		vec_tag content;
 		std::string tag_name;
-		TagInfo info;
+		TagInfo info = {};
 };
 class TagSTRING : public TagBase {
 	public:
@@ -44,7 +45,7 @@ class TagSTRING : public TagBase {
 		virtual TagInfo *get_info() { return &info; }
 		virtual void set_info(TagInfo ti) { info = ti; };
 		std::string content;
-		TagInfo info;
+		TagInfo info = {};
 };
 
 enum { TOK_TAG, TOK_END_TAG, TOK_OTHER };
@@ -79,5 +80,6 @@ class Renderer {
 	public:
 		Renderer() { }
 		~Renderer() { }
-		void rendering(vec_tag);
+		void rendering(vec_tag &);
 };
+
