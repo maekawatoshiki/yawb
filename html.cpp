@@ -24,18 +24,22 @@ void HTMLLex::lex(std::string str) {
 std::vector<token_t> &HTMLLex::get_token() { return token; }
 
 TagBase *HTMLParser::parse_tag(std::vector<token_t>::iterator &it) {
+	// parse each tag, then STYLE tag will be ignored
 	if(it->type == TOK_TAG) {
 		if(it->str == "STYLE") {
-			it++; lexer.lexer(it->str); it++;
-			parser.parse(lexer.get_token());
+			it++; slexer.lexer(it->str);
+			sparser.parse(slexer.get_token());
 		} else {
-		it++; // tag
-		TagBase *cont; std::vector<TagBase *> content;
-		while((cont = parse_tag(it)) != nullptr) { 
-			content.push_back(cont); 
-			++it; //TOK_TAG_END
-		}
-		return new TagGENERAL(it->str, content);
+			it++; // tag
+			TagBase *cont; std::vector<TagBase *> content;
+			while(true) { 
+				bool isstyle = it->str == "STYLE";
+				cont = parse_tag(it);
+				if(!cont && !isstyle) break;
+				if(!isstyle) content.push_back(cont);
+				++it; //TOK_TAG_END
+			}
+			return new TagGENERAL(it->str, content);
 		}
 	} else if(it->type == TOK_OTHER) {
 		return new TagSTRING(it->str);
@@ -46,7 +50,7 @@ void HTMLParser::parse(std::vector<token_t> token) {
 	for(auto tok = token.begin(); tok != token.end(); ++tok) {
 		if(tok->type == TOK_TAG) {
 			TagBase *tag = parse_tag(tok);
-			html.push_back(tag);
+			if(tag) html.push_back(tag);
 		}
 	}
 }

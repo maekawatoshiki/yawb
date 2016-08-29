@@ -67,8 +67,8 @@ class HTMLLex {
 
 class HTMLParser {
 		vec_tag html;
-		StyleLexer lexer;
-		StyleParser parser;
+		StyleLexer slexer;
+		StyleParser sparser;
 	public:
 		HTMLParser() { }
 		~HTMLParser() {}
